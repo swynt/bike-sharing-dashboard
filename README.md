@@ -26,6 +26,7 @@ submission/
 │   └── day.csv
 ├── notebook.ipynb
 ├── requirements.txt
+├── url.txt
 └── README.md
 ```
 
@@ -62,5 +63,4 @@ http://localhost:8501
 Nama: Cornelius Swiyanto  
 Email: sw.cornel@gmail.com  
 ID Dicoding: cswynt
-Live Dashboard:
-https://bike-sharing-dashboard-9xsv5bt8rdp8p83jovwnpc.streamlit.app/
+Live Dashboard: https://bike-sharing-dashboard-9xsv5bt8rdp8p83jovwnpc.streamlit.app/
