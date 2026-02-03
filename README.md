@@ -62,5 +62,5 @@ http://localhost:8501
 ## 👤 Author
 Nama: Cornelius Swiyanto  
 Email: sw.cornel@gmail.com  
-ID Dicoding: cswynt
+ID Dicoding: cswynt  
 Live Dashboard: https://bike-sharing-dashboard-9xsv5bt8rdp8p83jovwnpc.streamlit.app/
