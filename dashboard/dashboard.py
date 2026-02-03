@@ -1,7 +1,11 @@
+import os
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+BASE_DIR = os.path.dirname(__file__)
+file_path = os.path.join(BASE_DIR, "day.csv")
 
 # ======================
 # Page Config
@@ -16,7 +20,7 @@ st.write("Analisis tren penyewaan sepeda berdasarkan waktu dan faktor lingkungan
 # ======================
 @st.cache_data
 def load_data():
-    df = pd.read_csv("day.csv")
+    df = pd.read_csv(file_path)
     df['dteday'] = pd.to_datetime(df['dteday'])
     return df
 
