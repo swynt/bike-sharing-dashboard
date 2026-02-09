@@ -20,14 +20,15 @@ Hasil analisis ditampilkan dalam dashboard interaktif menggunakan Streamlit.
 
 ## 📂 Struktur Folder
 ```
-submission/
-├── dashboard/
-│   ├── dashboard.py
-│   └── day.csv
-├── notebook.ipynb
+submission
+├── dashboard
+│   ├── all_data.csv
+│   └── dashboard.py
+├── Proyek_Analisis_Data.ipynb
+├── README.md
 ├── requirements.txt
-├── url.txt
-└── README.md
+└── url.txt
+
 ```
 
 ---
