@@ -1,121 +1,142 @@
-import os
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-BASE_DIR = os.path.dirname(__file__)
-file_path = os.path.join(BASE_DIR, "day.csv")
+# =====================================================
+# PAGE CONFIG
+# =====================================================
+st.set_page_config(
+    page_title="Bike Sharing Dashboard",
+    layout="wide"
+)
 
-# ======================
-# Page Config
-# ======================
-st.set_page_config(page_title="Bike Sharing Dashboard", layout="wide")
+sns.set_style("whitegrid")
 
-st.title("🚲 Bike Sharing Dashboard")
-st.write("Analisis tren penyewaan sepeda berdasarkan waktu dan faktor lingkungan")
 
-# ======================
-# Load Data
-# ======================
+# =====================================================
+# LOAD CLEAN DATA (HASIL NOTEBOOK)
+# =====================================================
 @st.cache_data
 def load_data():
-    df = pd.read_csv(file_path)
-    df['dteday'] = pd.to_datetime(df['dteday'])
+    df = pd.read_csv("dashboard/all_data.csv")   # <-- dari notebook
+    df['date'] = pd.to_datetime(df['date'])
     return df
+
 
 df = load_data()
 
-# ======================
-# Mapping label biar human readable
-# ======================
-season_map = {
-    1: 'Spring',
-    2: 'Summer',
-    3: 'Fall',
-    4: 'Winter'
-}
 
-workingday_map = {
-    0: 'Weekend/Holiday',
-    1: 'Working Day'
-}
+# =====================================================
+# TITLE
+# =====================================================
+st.title("🚴 Bike Sharing Dashboard")
+st.caption("Analisis tren penyewaan sepeda dan faktor lingkungan (2011–2012)")
 
-df['season_label'] = df['season'].map(season_map)
-df['workingday_label'] = df['workingday'].map(workingday_map)
 
-# ======================
-# Sidebar Filter
-# ======================
-st.sidebar.header("Filter Data")
+# =====================================================
+# SIDEBAR FILTER
+# =====================================================
+st.sidebar.header("Filter Date")
 
-selected_year = st.sidebar.multiselect(
-    "Pilih Tahun",
-    options=df['yr'].unique(),
-    default=df['yr'].unique()
+start, end = st.sidebar.date_input(
+    "Rentang Waktu",
+    [df['date'].min(), df['date'].max()]
 )
 
-selected_season = st.sidebar.multiselect(
-    "Pilih Musim",
-    options=df['season_label'].unique(),
-    default=df['season_label'].unique()
-)
+df = df[(df['date'] >= pd.to_datetime(start)) &
+        (df['date'] <= pd.to_datetime(end))]
 
-filtered_df = df[
-    (df['yr'].isin(selected_year)) &
-    (df['season_label'].isin(selected_season))
-]
 
-# ======================
-# Metrics
-# ======================
-total_rentals = int(filtered_df['cnt'].sum())
-avg_daily = int(filtered_df['cnt'].mean())
-max_day = int(filtered_df['cnt'].max())
+# =====================================================
+# METRICS
+# =====================================================
+c1, c2, c3 = st.columns(3)
 
-col1, col2, col3 = st.columns(3)
+c1.metric("Total Rentals", f"{df['total_rentals'].sum():,}")
+c2.metric("Avg Daily", f"{int(df['total_rentals'].mean()):,}")
+c3.metric("Max Daily", f"{df['total_rentals'].max():,}")
 
-col1.metric("Total Rentals", f"{total_rentals:,}")
-col2.metric("Avg Daily Rentals", avg_daily)
-col3.metric("Peak Daily Rentals", max_day)
 
-# ======================
-# Line Chart Trend
-# ======================
-st.subheader("📈 Daily Rental Trend")
+# =====================================================
+# ==================== Q1 =============================
+# Trend waktu
+# =====================================================
+st.header("📈 Tren Penyewaan Sepeda Harian")
 
-fig, ax = plt.subplots(figsize=(12,4))
-ax.plot(filtered_df['dteday'], filtered_df['cnt'])
-ax.set_xlabel("Date")
-ax.set_ylabel("Rentals")
+st.line_chart(df.set_index('date')['total_rentals'])
 
-st.pyplot(fig)
 
-# ======================
-# Season Chart
-# ======================
-st.subheader("🌿 Rentals by Season")
+# =====================================================
+# ==================== Q2 =============================
+# Faktor lingkungan
+# =====================================================
+st.header("🌦 Pengaruh Faktor Lingkungan")
 
-season_data = filtered_df.groupby('season_label', observed=True)['cnt'].mean()
+col1, col2 = st.columns(2)
 
-st.bar_chart(season_data)
+with col1:
+    st.subheader("Season vs Rentals")
+    fig1, ax1 = plt.subplots()
+    sns.boxplot(
+        x='season_label',
+        y='total_rentals',
+        data=df,
+        order=['Spring','Summer','Fall','Winter'],
+        ax=ax1
+    )
+    st.pyplot(fig1)
 
-# ======================
-# Working Day Chart
-# ======================
-st.subheader("🏢 Working Day vs Weekend")
 
-workingday_data = filtered_df.groupby('workingday_label', observed=True)['cnt'].mean()
+with col2:
+    st.subheader("Working Day vs Rentals")
+    fig2, ax2 = plt.subplots()
+    sns.boxplot(
+        x='workingday_label',
+        y='total_rentals',
+        data=df,
+        order=['Weekend/Holiday','Working Day'],
+        ax=ax2
+    )
+    st.pyplot(fig2)
 
-st.bar_chart(workingday_data)
 
-# ======================
-# Footer Insight
-# ======================
-st.markdown("---")
-st.markdown("""
-### Insight:
-- Permintaan meningkat saat musim hangat (Summer/Fall)
-- Hari kerja memiliki rental lebih tinggi (commuting)
-- Musim dingin menunjukkan penurunan signifikan
-""")
+# =====================================================
+# ================= ANALISIS LANJUTAN ==================
+# =====================================================
+st.header("🔥 Analisis Lanjutan")
+
+col3, col4 = st.columns(2)
+
+
+# ---- Temperature binning ----
+with col3:
+    st.subheader("Rental berdasarkan Suhu")
+
+    df['temp_group'] = pd.cut(df['temp'], bins=3, labels=['Cold','Warm','Hot'])
+    temp_avg = df.groupby('temp_group')['total_rentals'].mean()
+
+    st.bar_chart(temp_avg)
+
+
+# ---- Demand clustering ----
+with col4:
+    st.subheader("Segmentasi Level Permintaan")
+
+    df['demand_level'] = pd.qcut(
+        df['total_rentals'],
+        q=3,
+        labels=['Low','Medium','High']
+    )
+
+    demand_avg = df.groupby('demand_level')['total_rentals'].mean()
+
+    st.bar_chart(demand_avg)
+
+
+# =====================================================
+# FOOTER
+# =====================================================
+st.caption("Created with Streamlit • Dicoding Data Analysis Project")
+st.caption("Dataset: Bike Sharing Dataset (UCI Repository)")
+st.caption("By Cornelius")
