@@ -1,2 +1,5 @@
+GitHub Repository:
+https://github.com/swynt/bike-sharing-dashboard.git
+
 Live Dashboard:
 https://bike-sharing-dashboard-9xsv5bt8rdp8p83jovwnpc.streamlit.app/
